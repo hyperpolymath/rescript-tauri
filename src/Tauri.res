@@ -31,6 +31,9 @@
  * - `Command` - Type-safe command bridge
  * - `Fs` - Filesystem operations
  * - `Dialog` - Native file/message dialogs
+ * - `Shell` - Shell commands and process spawning
+ * - `Notification` - System notifications
+ * - `Clipboard` - Clipboard read/write
  */
 
 // Re-export all modules
@@ -40,6 +43,9 @@ module Window = Tauri_Window
 module Command = Tauri_Command
 module Fs = Tauri_Fs
 module Dialog = Tauri_Dialog
+module Shell = Tauri_Shell
+module Notification = Tauri_Notification
+module Clipboard = Tauri_Clipboard
 
 // Convenience re-exports for common operations
 let invoke = Core.invoke

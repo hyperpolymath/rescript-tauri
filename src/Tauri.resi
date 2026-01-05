@@ -9,6 +9,9 @@ module Window = Tauri_Window
 module Command = Tauri_Command
 module Fs = Tauri_Fs
 module Dialog = Tauri_Dialog
+module Shell = Tauri_Shell
+module Notification = Tauri_Notification
+module Clipboard = Tauri_Clipboard
 
 // Convenience re-exports
 let invoke: (string, ~args: Core.invokeArgs=?, ~options: Core.invokeOptions=?) => promise<'response>
