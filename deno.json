@@ -1,18 +1,54 @@
 {
   "name": "@hyperpolymath/rescript-tauri",
   "version": "0.1.0",
-  "exports": "./lib/es6/src/Tauri.res.mjs",
+  "license": "AGPL-3.0-or-later",
+  "nodeModulesDir": "auto",
+  "exports": {
+    ".": "./lib/es6/src/Tauri.res.mjs",
+    "./core": "./lib/es6/src/bindings/Tauri_Core.res.mjs",
+    "./event": "./lib/es6/src/bindings/Tauri_Event.res.mjs",
+    "./window": "./lib/es6/src/bindings/Tauri_Window.res.mjs",
+    "./command": "./lib/es6/src/bridge/Tauri_Command.res.mjs",
+    "./fs": "./lib/es6/src/bindings/Tauri_Fs.res.mjs",
+    "./dialog": "./lib/es6/src/bindings/Tauri_Dialog.res.mjs",
+    "./shell": "./lib/es6/src/bindings/Tauri_Shell.res.mjs",
+    "./notification": "./lib/es6/src/bindings/Tauri_Notification.res.mjs",
+    "./clipboard": "./lib/es6/src/bindings/Tauri_Clipboard.res.mjs"
+  },
   "imports": {
     "@tauri-apps/api": "npm:@tauri-apps/api@^2.0.0",
+    "@tauri-apps/plugin-fs": "npm:@tauri-apps/plugin-fs@^2.0.0",
+    "@tauri-apps/plugin-dialog": "npm:@tauri-apps/plugin-dialog@^2.0.0",
+    "@tauri-apps/plugin-shell": "npm:@tauri-apps/plugin-shell@^2.0.0",
+    "@tauri-apps/plugin-notification": "npm:@tauri-apps/plugin-notification@^2.0.0",
+    "@tauri-apps/plugin-clipboard-manager": "npm:@tauri-apps/plugin-clipboard-manager@^2.0.0",
     "@rescript/core": "npm:@rescript/core@^1.0.0",
     "rescript": "npm:rescript@^11.0.0"
+  },
+  "publish": {
+    "include": [
+      "lib/es6/**/*.mjs",
+      "src/**/*.res",
+      "src/**/*.resi",
+      "deno.json",
+      "README.adoc",
+      "LICENSE"
+    ],
+    "exclude": [
+      "node_modules/",
+      "examples/",
+      "test/",
+      ".github/"
+    ]
   },
   "tasks": {
     "build": "deno run -A npm:rescript build",
     "watch": "deno run -A npm:rescript build -w",
     "clean": "deno run -A npm:rescript clean",
     "test": "deno test --allow-read --allow-env test/",
-    "check": "deno check src/**/*.res.mjs"
+    "check": "deno check lib/es6/**/*.mjs",
+    "publish:dry": "deno publish --dry-run",
+    "publish": "deno publish"
   },
   "fmt": {
     "include": ["src/", "test/", "examples/"],
