@@ -18,6 +18,9 @@ type theme =
   | @as("light") Light
   | @as("dark") Dark
 
+type focusChangedPayload = {focused: bool}
+type scaleChangedPayload = {scaleFactor: float, size: physicalSize}
+
 type cursorIcon =
   | @as("default") Default
   | @as("crosshair") Crosshair
@@ -134,10 +137,10 @@ let setVisibleOnAllWorkspaces: (window, bool) => promise<unit>
 // ============================================================================
 
 let onCloseRequested: (window, unit => promise<unit>) => promise<unit => unit>
-let onFocusChanged: (window, {focused: bool} => unit) => promise<unit => unit>
+let onFocusChanged: (window, focusChangedPayload => unit) => promise<unit => unit>
 let onMoved: (window, physicalPosition => unit) => promise<unit => unit>
 let onResized: (window, physicalSize => unit) => promise<unit => unit>
-let onScaleChanged: (window, {scaleFactor: float, size: physicalSize} => unit) => promise<unit => unit>
+let onScaleChanged: (window, scaleChangedPayload => unit) => promise<unit => unit>
 let onThemeChanged: (window, theme => unit) => promise<unit => unit>
 
 // ============================================================================

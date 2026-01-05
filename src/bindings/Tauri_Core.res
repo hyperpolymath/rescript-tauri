@@ -11,7 +11,7 @@ open RescriptCore
 // ============================================================================
 
 /** Invoke arguments - any JSON-serializable record */
-type invokeArgs = {..}
+type invokeArgs = JSON.t
 
 /** Invoke options for customizing command calls */
 type invokeOptions = {
@@ -108,6 +108,9 @@ external resourceRid: resource => int = "rid"
 // Image API
 // ============================================================================
 
+/** Image size */
+type imageDimensions = {width: int, height: int}
+
 /** Image handle for Tauri image operations */
 type image
 
@@ -121,7 +124,7 @@ external imageFromPath: string => promise<image> = "Image"
 external imageRgba: image => promise<Uint8Array.t> = "rgba"
 
 @send
-external imageSize: image => {width: int, height: int} = "size"
+external imageSize: image => imageDimensions = "size"
 
 // ============================================================================
 // App Info API

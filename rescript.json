@@ -9,11 +9,6 @@
       "dir": "test",
       "subdirs": true,
       "type": "dev"
-    },
-    {
-      "dir": "examples",
-      "subdirs": true,
-      "type": "dev"
     }
   ],
   "package-specs": [
@@ -26,9 +21,7 @@
   "bs-dependencies": [
     "@rescript/core"
   ],
-  "bs-dev-dependencies": [
-    "rescript-tea"
-  ],
+  "bs-dev-dependencies": [],
   "warnings": {
     "number": "+A-48-42"
   }

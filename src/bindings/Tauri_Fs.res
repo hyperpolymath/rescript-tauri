@@ -88,7 +88,7 @@ type watchEventKind =
 type watchEvent = {
   @as("type") kind: watchEventKind,
   paths: array<string>,
-  attrs: {..},
+  attrs: JSON.t,
 }
 
 /** File handle (opaque) */
@@ -244,7 +244,7 @@ external watchImmediate: (
 /**
  * Read a JSON file and parse it.
  */
-let readJsonFile = async (path: string, ~options: readOptions=?): result<JSON.t, string> => {
+let readJsonFile = async (path: string, ~options=?): result<JSON.t, string> => {
   try {
     let content = await readTextFile(path, ~options?)
     switch JSON.parseExn(content) {
@@ -253,6 +253,7 @@ let readJsonFile = async (path: string, ~options: readOptions=?): result<JSON.t,
     }
   } catch {
   | Exn.Error(err) => Error(Exn.message(err)->Option.getOr("Failed to read file"))
+  | _ => Error("Failed to read file")
   }
 }
 
@@ -262,7 +263,7 @@ let readJsonFile = async (path: string, ~options: readOptions=?): result<JSON.t,
 let writeJsonFile = async (
   path: string,
   data: JSON.t,
-  ~options: writeOptions=?,
+  ~options=?,
 ): result<unit, string> => {
   try {
     let content = JSON.stringify(data, ~space=2)
@@ -270,21 +271,30 @@ let writeJsonFile = async (
     Ok()
   } catch {
   | Exn.Error(err) => Error(Exn.message(err)->Option.getOr("Failed to write file"))
+  | _ => Error("Failed to write file")
   }
 }
 
 /**
  * Ensure a directory exists, creating it if necessary.
  */
-let ensureDir = async (path: string, ~options: mkdirOptions=?): result<unit, string> => {
+let ensureDir = async (path: string, ~options=?): result<unit, string> => {
   try {
-    let dirExists = await exists(path, ~options={baseDir: ?options.baseDir})
+    let baseDir: option<baseDirectory> = switch options {
+    | Some(o: mkdirOptions) => o.baseDir
+    | None => None
+    }
+    let dirExists = await exists(path, ~options={baseDir: ?baseDir})
     if !dirExists {
-      await mkdir(path, ~options={...options, recursive: true})
+      switch options {
+      | Some(o: mkdirOptions) => await mkdir(path, ~options={...o, recursive: true})
+      | None => await mkdir(path, ~options={recursive: true})
+      }
     }
     Ok()
   } catch {
   | Exn.Error(err) => Error(Exn.message(err)->Option.getOr("Failed to ensure directory"))
+  | _ => Error("Failed to ensure directory")
   }
 }
 
@@ -293,7 +303,7 @@ let ensureDir = async (path: string, ~options: mkdirOptions=?): result<unit, str
  */
 let rec listFilesRecursive = async (
   path: string,
-  ~options: readOptions=?,
+  ~options=?,
 ): result<array<string>, string> => {
   try {
     let entries = await readDir(path, ~options?)
@@ -316,5 +326,6 @@ let rec listFilesRecursive = async (
     Ok(allFiles)
   } catch {
   | Exn.Error(err) => Error(Exn.message(err)->Option.getOr("Failed to list files"))
+  | _ => Error("Failed to list files")
   }
 }

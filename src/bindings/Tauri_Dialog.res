@@ -16,6 +16,12 @@ type dialogFilter = {
   extensions: array<string>,
 }
 
+/** Message dialog kind */
+type messageKind =
+  | @as("info") Info
+  | @as("warning") Warning
+  | @as("error") Error_
+
 /** Open dialog options */
 type openDialogOptions = {
   title?: string,
@@ -44,7 +50,7 @@ type messageDialogOptions = {
 }
 
 /** Confirm dialog options */
-and confirmDialogOptions = {
+type confirmDialogOptions = {
   title?: string,
   kind?: messageKind,
   okLabel?: string,
@@ -52,18 +58,12 @@ and confirmDialogOptions = {
 }
 
 /** Ask dialog options */
-and askDialogOptions = {
+type askDialogOptions = {
   title?: string,
   kind?: messageKind,
   okLabel?: string,
   cancelLabel?: string,
 }
-
-/** Message dialog kind */
-and messageKind =
-  | @as("info") Info
-  | @as("warning") Warning
-  | @as("error") Error_
 
 // ============================================================================
 // File Dialogs
@@ -80,8 +80,12 @@ external open_: (~options: openDialogOptions=?) => promise<Nullable.t<array<stri
  * Open a file picker dialog (single file).
  * Convenience wrapper when multiple=false.
  */
-let openSingle = async (~options: openDialogOptions=?): option<string> => {
-  let result = await open_(~options={...?options, multiple: false})
+let openSingle = async (~options=?): option<string> => {
+  let opts: openDialogOptions = switch options {
+  | Some(o) => {...o, multiple: false}
+  | None => {multiple: false}
+  }
+  let result = await open_(~options=opts)
   switch result->Nullable.toOption {
   | Some(paths) => paths[0]
   | None => None
@@ -92,8 +96,12 @@ let openSingle = async (~options: openDialogOptions=?): option<string> => {
  * Open a file picker dialog (multiple files).
  * Convenience wrapper when multiple=true.
  */
-let openMultiple = async (~options: openDialogOptions=?): array<string> => {
-  let result = await open_(~options={...?options, multiple: true})
+let openMultiple = async (~options=?): array<string> => {
+  let opts: openDialogOptions = switch options {
+  | Some(o) => {...o, multiple: true}
+  | None => {multiple: true}
+  }
+  let result = await open_(~options=opts)
   result->Nullable.toOption->Option.getOr([])
 }
 
@@ -101,8 +109,12 @@ let openMultiple = async (~options: openDialogOptions=?): array<string> => {
  * Open a directory picker dialog.
  * Convenience wrapper when directory=true.
  */
-let openDirectory = async (~options: openDialogOptions=?): option<string> => {
-  let result = await open_(~options={...?options, directory: true, multiple: false})
+let openDirectory = async (~options=?): option<string> => {
+  let opts: openDialogOptions = switch options {
+  | Some(o) => {...o, directory: true, multiple: false}
+  | None => {directory: true, multiple: false}
+  }
+  let result = await open_(~options=opts)
   switch result->Nullable.toOption {
   | Some(paths) => paths[0]
   | None => None
@@ -119,7 +131,7 @@ external save: (~options: saveDialogOptions=?) => promise<Nullable.t<string>> = 
 /**
  * Open a save file dialog with result type.
  */
-let saveFile = async (~options: saveDialogOptions=?): option<string> => {
+let saveFile = async (~options=?): option<string> => {
   let result = await save(~options?)
   result->Nullable.toOption
 }
@@ -138,21 +150,21 @@ external message: (string, ~options: messageDialogOptions=?) => promise<unit> = 
 /**
  * Show an info message dialog.
  */
-let info = (msg: string, ~title: string=?) => {
+let info = (msg: string, ~title=?) => {
   message(msg, ~options={kind: Info, ?title})
 }
 
 /**
  * Show a warning message dialog.
  */
-let warning = (msg: string, ~title: string=?) => {
+let warning = (msg: string, ~title=?) => {
   message(msg, ~options={kind: Warning, ?title})
 }
 
 /**
  * Show an error message dialog.
  */
-let error = (msg: string, ~title: string=?) => {
+let error = (msg: string, ~title=?) => {
   message(msg, ~options={kind: Error_, ?title})
 }
 

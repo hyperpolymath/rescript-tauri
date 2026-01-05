@@ -7,6 +7,15 @@
 open RescriptCore
 
 // ============================================================================
+// Timer Bindings (for internal use)
+// ============================================================================
+
+type timeoutId
+
+@val external setTimeout: (unit => unit, int) => timeoutId = "setTimeout"
+@val external clearTimeout: timeoutId => unit = "clearTimeout"
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -132,13 +141,13 @@ let emitAndWait = async (
   payload: 'request,
   responseEvent: string,
   ~timeout: int=5000,
-): result<'response, string> => {
+): promise<result<'response, string>> => {
   Promise.make((resolve, _reject) => {
-    let timeoutId = ref(None)
+    let timeoutIdRef = ref(None)
 
     let cleanup = () => {
-      switch timeoutId.contents {
-      | Some(id) => Global.clearTimeout(id)
+      switch timeoutIdRef.contents {
+      | Some(id) => clearTimeout(id)
       | None => ()
       }
     }
@@ -148,8 +157,8 @@ let emitAndWait = async (
       resolve(Ok(event.payload))
     })
 
-    timeoutId := Some(
-      Global.setTimeout(() => {
+    timeoutIdRef := Some(
+      setTimeout(() => {
         resolve(Error(`Timeout waiting for ${responseEvent}`))
       }, timeout),
     )

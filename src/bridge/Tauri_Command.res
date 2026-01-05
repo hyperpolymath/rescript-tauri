@@ -6,6 +6,10 @@
 
 open RescriptCore
 
+// Timer bindings (not in RescriptCore)
+@val external setTimeout: (unit => unit, int) => int = "setTimeout"
+@val external clearTimeout: int => unit = "clearTimeout"
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -23,7 +27,7 @@ type commandResult<'a> = result<'a, commandError>
 /** Command definition - describes a Tauri command's contract */
 type commandDef<'args, 'response> = {
   name: string,
-  encode: 'args => {..},
+  encode: 'args => JSON.t,
   decode: JSON.t => result<'response, string>,
 }
 
@@ -82,10 +86,10 @@ module CommandError = {
  */
 let defineCommand = (
   ~name: string,
-  ~encode: 'args => {..},
+  ~encode: 'args => JSON.t,
   ~decode: JSON.t => result<'response, string>,
 ): commandDef<'args, 'response> => {
-  {name, encode, decode}
+  {name, encode: args => encode(args), decode}
 }
 
 /**
@@ -105,7 +109,7 @@ let defineNoArgsCommand = (
 /**
  * Define a command with no response (unit return).
  */
-let defineVoidCommand = (~name: string, ~encode: 'args => {..}): commandDef<'args, unit> => {
+let defineVoidCommand = (~name: string, ~encode: 'args => JSON.t): commandDef<'args, unit> => {
   {
     name,
     encode,
@@ -161,7 +165,7 @@ let executeWithRetry = async (
       | Error(err) =>
         if retriesLeft > 1 {
           await Promise.make((resolve, _) => {
-            let _ = Global.setTimeout(() => resolve(), delayMs)
+            let _ = setTimeout(() => resolve(), delayMs)
           })
           await loop(retriesLeft - 1, Some(err))
         } else {
@@ -183,7 +187,7 @@ let executeWithTimeout = async (
   ~timeoutMs: int,
 ): commandResult<'response> => {
   let timeoutPromise = Promise.make((resolve, _) => {
-    let _ = Global.setTimeout(() => {
+    let _ = setTimeout(() => {
       resolve(Error(CommandError.make(~code=CommandError.timeout, ~message="Command timed out")))
     }, timeoutMs)
   })
@@ -213,15 +217,22 @@ let executeSequential = async (commands: array<unit => promise<commandResult<'a>
   array<'a>,
 > => {
   let results = []
+  let error = ref(None)
 
-  for i in 0 to Array.length(commands) - 1 {
-    switch await commands[i]->Option.getExn() {
+  let i = ref(0)
+  while i.contents < Array.length(commands) && error.contents->Option.isNone {
+    let cmd = commands[i.contents]->Option.getExn
+    switch await cmd() {
     | Ok(result) => Array.push(results, result)->ignore
-    | Error(err) => return Error(err)
+    | Error(err) => error := Some(err)
     }
+    i := i.contents + 1
   }
 
-  Ok(results)
+  switch error.contents {
+  | Some(err) => Error(err)
+  | None => Ok(results)
+  }
 }
 
 // ============================================================================
@@ -284,20 +295,19 @@ module Builder = {
 
   /** Execute the command with configured options */
   let run = async (builder: t<'args, 'response>, args: 'args): commandResult<'response> => {
-    let baseExecute = switch builder.retries {
-    | Some(retries) =>
-      executeWithRetry(
-        builder.cmd,
-        args,
-        ~maxRetries=retries,
-        ~delayMs=builder.retryDelay->Option.getOr(1000),
-      )
-    | None => execute(builder.cmd, args)
-    }
-
     switch builder.timeout {
-    | Some(timeout) => executeWithTimeout(builder.cmd, args, ~timeoutMs=timeout)
-    | None => await baseExecute
+    | Some(timeout) => await executeWithTimeout(builder.cmd, args, ~timeoutMs=timeout)
+    | None =>
+      switch builder.retries {
+      | Some(retries) =>
+        await executeWithRetry(
+          builder.cmd,
+          args,
+          ~maxRetries=retries,
+          ~delayMs=builder.retryDelay->Option.getOr(1000),
+        )
+      | None => await execute(builder.cmd, args)
+      }
     }
   }
 }

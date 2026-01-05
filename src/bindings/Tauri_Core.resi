@@ -9,7 +9,7 @@ open RescriptCore
 // Types
 // ============================================================================
 
-type invokeArgs = {..}
+type invokeArgs = JSON.t
 type invokeOptions = {headers?: Dict.t<string>}
 
 type permissionState =
@@ -67,11 +67,12 @@ let resourceRid: resource => int
 // Image API
 // ============================================================================
 
+type imageDimensions = {width: int, height: int}
 type image
 let imageFromBytes: Uint8Array.t => promise<image>
 let imageFromPath: string => promise<image>
 let imageRgba: image => promise<Uint8Array.t>
-let imageSize: image => {width: int, height: int}
+let imageSize: image => imageDimensions
 
 // ============================================================================
 // App Info API

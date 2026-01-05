@@ -69,4 +69,4 @@ let emitAndWait: (
   'request,
   string,
   ~timeout: int=?,
-) => promise<result<'response, string>>
+) => promise<promise<result<'response, string>>>

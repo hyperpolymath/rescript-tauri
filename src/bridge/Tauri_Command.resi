@@ -19,7 +19,7 @@ type commandResult<'a> = result<'a, commandError>
 
 type commandDef<'args, 'response> = {
   name: string,
-  encode: 'args => {..},
+  encode: 'args => JSON.t,
   decode: JSON.t => result<'response, string>,
 }
 
@@ -41,7 +41,7 @@ module CommandError: {
   let networkError: string
   let serializationError: string
 
-  let make: (~code: string, ~message: string, ~details: option<JSON.t>=?) => commandError
+  let make: (~code: string, ~message: string, ~details: JSON.t=?) => commandError
   let toString: commandError => string
   let isCode: (commandError, string) => bool
   let fromExn: exn => commandError
@@ -53,7 +53,7 @@ module CommandError: {
 
 let defineCommand: (
   ~name: string,
-  ~encode: 'args => {..},
+  ~encode: 'args => JSON.t,
   ~decode: JSON.t => result<'response, string>,
 ) => commandDef<'args, 'response>
 
@@ -62,7 +62,7 @@ let defineNoArgsCommand: (
   ~decode: JSON.t => result<'response, string>,
 ) => commandDef<unit, 'response>
 
-let defineVoidCommand: (~name: string, ~encode: 'args => {..}) => commandDef<'args, unit>
+let defineVoidCommand: (~name: string, ~encode: 'args => JSON.t) => commandDef<'args, unit>
 
 // ============================================================================
 // Command Execution

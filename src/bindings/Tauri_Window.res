@@ -27,6 +27,12 @@ type theme =
   | @as("light") Light
   | @as("dark") Dark
 
+/** Focus changed event payload */
+type focusChangedPayload = {focused: bool}
+
+/** Scale changed event payload */
+type scaleChangedPayload = {scaleFactor: float, size: physicalSize}
+
 /** Cursor icon types */
 type cursorIcon =
   | @as("default") Default
@@ -154,7 +160,7 @@ external onCloseRequested: (window, unit => promise<unit>) => promise<unit => un
   "onCloseRequested"
 
 @send
-external onFocusChanged: (window, {focused: bool} => unit) => promise<unit => unit> =
+external onFocusChanged: (window, focusChangedPayload => unit) => promise<unit => unit> =
   "onFocusChanged"
 
 @send
@@ -164,7 +170,7 @@ external onMoved: (window, physicalPosition => unit) => promise<unit => unit> = 
 external onResized: (window, physicalSize => unit) => promise<unit => unit> = "onResized"
 
 @send
-external onScaleChanged: (window, {scaleFactor: float, size: physicalSize} => unit) => promise<unit => unit> =
+external onScaleChanged: (window, scaleChangedPayload => unit) => promise<unit => unit> =
   "onScaleChanged"
 
 @send
