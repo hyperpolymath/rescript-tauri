@@ -281,7 +281,7 @@ This library is part of the https://github.com/hyperpolymath/rescript-full-stack
 
 == License
 
-AGPL-3.0-or-later
+PMPL-1.0-or-later
 
 == Contributing
 
