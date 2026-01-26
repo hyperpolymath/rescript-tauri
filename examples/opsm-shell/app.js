@@ -14,6 +14,21 @@ const backendStatus = {
   auto: "unknown",
 };
 
+async function detectBackends() {
+  if (!window.__TAURI__ || !window.__TAURI__.invoke) {
+    return;
+  }
+  const keys = Object.keys(backendStatus);
+  for (const key of keys) {
+    try {
+      const status = await window.__TAURI__.invoke("check_backend", { backend: key });
+      backendStatus[key] = status;
+    } catch (err) {
+      backendStatus[key] = "unknown";
+    }
+  }
+}
+
 function setMode(value) {
   document.body.setAttribute("data-mode", value);
   modeSelect.value = value;
@@ -136,7 +151,8 @@ modeSelect.addEventListener("change", (event) => {
   setMode(event.target.value);
 });
 
-planButton.addEventListener("click", () => {
+planButton.addEventListener("click", async () => {
+  await detectBackends();
   const text = input.value || "";
   const plan = parsePlan(text);
   renderPlan(plan);

@@ -8,7 +8,39 @@
     windows_subsystem = "windows"
 )]
 
+use std::collections::HashMap;
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
+
+#[tauri::command]
+fn check_backend(backend: String) -> String {
+    let commands: HashMap<&str, Vec<&str>> = HashMap::from([
+        ("rpm-ostree", vec!["rpm-ostree"]),
+        ("toolbox", vec!["toolbox"]),
+        ("distrobox", vec!["distrobox"]),
+        ("container", vec!["podman", "docker"]),
+        ("dnfinition", vec!["dnfinition"]),
+        ("flatpak", vec!["flatpak"]),
+        ("snap", vec!["snap"]),
+        ("native", vec![]),
+        ("git", vec![]),
+        ("source", vec![]),
+        ("auto", vec![]),
+    ]);
+
+    if let Some(cmds) = commands.get(backend.as_str()) {
+        if cmds.is_empty() {
+            return "available".to_string();
+        }
+        for cmd in cmds {
+            if which::which(cmd).is_ok() {
+                return "available".to_string();
+            }
+        }
+        return "missing".to_string();
+    }
+
+    "unknown".to_string()
+}
 
 fn main() {
     let mode_user = CustomMenuItem::new("mode_user".to_string(), "WYSIWYG (User)");
@@ -27,6 +59,7 @@ fn main() {
 
     tauri::Builder::default()
         .menu(menu)
+        .invoke_handler(tauri::generate_handler![check_backend])
         .on_menu_event(|event| {
             let window = event.window();
             match event.menu_item_id() {
