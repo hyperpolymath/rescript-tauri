@@ -3,6 +3,17 @@ const input = document.querySelector(".input");
 const planPanel = document.querySelector(".plan");
 const planButton = document.querySelector(".panel-footer button");
 
+const backendStatus = {
+  "rpm-ostree": "unknown",
+  toolbox: "unknown",
+  distrobox: "unknown",
+  container: "unknown",
+  native: "available",
+  git: "available",
+  source: "available",
+  auto: "unknown",
+};
+
 function setMode(value) {
   document.body.setAttribute("data-mode", value);
   modeSelect.value = value;
@@ -111,8 +122,12 @@ function renderPlan(plan) {
     return;
   }
   entries.forEach(([backend, pkgs]) => {
+    const status = backendStatus[backend] || "unknown";
     const row = document.createElement("div");
-    row.innerHTML = `<strong>${backend}:</strong> ${pkgs.join(", ")}`;
+    row.innerHTML = `
+      <strong>${backend}:</strong> ${pkgs.join(", ")}
+      <span class="status status-${status}">${status}</span>
+    `;
     planPanel.appendChild(row);
   });
 }
