@@ -2,6 +2,8 @@ const modeSelect = document.getElementById("mode");
 const input = document.querySelector(".input");
 const planPanel = document.querySelector(".plan");
 const planButton = document.querySelector(".panel-footer button");
+const capabilities = document.querySelector(".cap-list");
+const cliOutput = document.querySelector(".cli-output");
 
 const backendStatus = {
   "rpm-ostree": "unknown",
@@ -27,6 +29,13 @@ async function detectBackends() {
       backendStatus[key] = "unknown";
     }
   }
+}
+
+function renderCapabilities() {
+  const entries = Object.entries(backendStatus)
+    .filter(([, status]) => status === "available")
+    .map(([backend]) => backend);
+  capabilities.textContent = entries.length ? entries.join(", ") : "none detected";
 }
 
 function setMode(value) {
@@ -147,15 +156,31 @@ function renderPlan(plan) {
   });
 }
 
+async function runCliDryRun() {
+  if (!window.__TAURI__ || !window.__TAURI__.invoke) {
+    cliOutput.textContent = "CLI integration requires Tauri.";
+    return;
+  }
+  const text = input.value || "";
+  try {
+    const output = await window.__TAURI__.invoke("opsm_dry_run", { args: text });
+    cliOutput.textContent = output;
+  } catch (err) {
+    cliOutput.textContent = String(err);
+  }
+}
+
 modeSelect.addEventListener("change", (event) => {
   setMode(event.target.value);
 });
 
 planButton.addEventListener("click", async () => {
   await detectBackends();
+  renderCapabilities();
   const text = input.value || "";
   const plan = parsePlan(text);
   renderPlan(plan);
+  await runCliDryRun();
 });
 
 // Optional Tauri menu integration
@@ -172,3 +197,6 @@ if (window.__TAURI__ && window.__TAURI__.event) {
     }
   });
 }
+
+// initial capabilities render
+renderCapabilities();

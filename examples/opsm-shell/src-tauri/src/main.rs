@@ -9,6 +9,7 @@
 )]
 
 use std::collections::HashMap;
+use std::process::Command;
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 
 #[tauri::command]
@@ -42,6 +43,28 @@ fn check_backend(backend: String) -> String {
     "unknown".to_string()
 }
 
+#[tauri::command]
+fn opsm_dry_run(args: String) -> String {
+    let mut parts = vec!["install".to_string(), "--dry-run".to_string()];
+    if !args.trim().is_empty() {
+        parts.extend(args.split_whitespace().map(|s| s.to_string()));
+    }
+
+    let output = Command::new("opsm")
+        .args(parts)
+        .output();
+
+    match output {
+        Ok(out) => {
+            let mut buf = String::new();
+            buf.push_str(&String::from_utf8_lossy(&out.stdout));
+            buf.push_str(&String::from_utf8_lossy(&out.stderr));
+            buf
+        }
+        Err(err) => format!("Failed to run opsm: {err}"),
+    }
+}
+
 fn main() {
     let mode_user = CustomMenuItem::new("mode_user".to_string(), "WYSIWYG (User)");
     let mode_maint = CustomMenuItem::new("mode_maint".to_string(), "WYSIWYGM (Maintainer)");
@@ -59,7 +82,7 @@ fn main() {
 
     tauri::Builder::default()
         .menu(menu)
-        .invoke_handler(tauri::generate_handler![check_backend])
+        .invoke_handler(tauri::generate_handler![check_backend, opsm_dry_run])
         .on_menu_event(|event| {
             let window = event.window();
             match event.menu_item_id() {

@@ -250,3 +250,31 @@ body[data-mode="wymiwyg"] .hero {
   background: #fde8e8;
   color: #a11d1d;
 }
+
+.capabilities {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: #f8f7f1;
+  font-size: 12px;
+}
+
+.cap-label {
+  font-weight: 600;
+}
+
+.cap-list {
+  color: var(--muted);
+}
+
+.cli-output {
+  background: #111;
+  color: #eaeaea;
+  padding: 10px;
+  border-radius: 10px;
+  min-height: 80px;
+  font-size: 12px;
+  overflow-x: auto;
+}
