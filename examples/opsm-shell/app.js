@@ -200,3 +200,10 @@ if (window.__TAURI__ && window.__TAURI__.event) {
 
 // initial capabilities render
 renderCapabilities();
+
+async function startupDetect() {
+  await detectBackends();
+  renderCapabilities();
+}
+
+startupDetect();
