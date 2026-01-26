@@ -8,6 +8,44 @@ function setMode(value) {
   modeSelect.value = value;
 }
 
+function tokenizePlan(text) {
+  const tokens = [];
+  let current = "";
+  let inBracket = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "[") {
+      if (current.trim()) {
+        tokens.push(current.trim());
+      }
+      current = "";
+      inBracket = true;
+      continue;
+    }
+    if (ch === "]") {
+      if (current.trim()) {
+        tokens.push("[" + current.trim() + "]");
+      }
+      current = "";
+      inBracket = false;
+      continue;
+    }
+    if (!inBracket && /\s/.test(ch)) {
+      if (current.trim()) {
+        tokens.push(current.trim());
+        current = "";
+      }
+      continue;
+    }
+    current += ch;
+  }
+  if (current.trim()) {
+    tokens.push(inBracket ? "[" + current.trim() + "]" : current.trim());
+  }
+  return tokens;
+}
+
 function parsePlan(text) {
   const backends = new Set([
     "rpm-ostree",
@@ -20,33 +58,46 @@ function parsePlan(text) {
     "auto",
   ]);
 
-  const tokens = text
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .map((t) => t.replace(/^\[/, "").replace(/\]$/, ""));
-
+  const tokens = tokenizePlan(text);
   let current = "auto";
   const plan = {};
 
   tokens.forEach((token) => {
+    if (token.startsWith("[") && token.endsWith("]")) {
+      const inner = token.slice(1, -1).trim();
+      const parts = inner.split(":");
+      const backend = parts[0].toLowerCase();
+      const resolved = backends.has(backend) ? backend : "auto";
+      const rest = parts.slice(1).join(":").trim();
+      if (rest.length > 0) {
+        rest.split(/\s+/).forEach((pkg) => {
+          if (!pkg) return;
+          plan[resolved] = plan[resolved] || [];
+          plan[resolved].push(pkg);
+        });
+      }
+      current = resolved;
+      return;
+    }
+
     const parts = token.split(":");
     if (parts.length > 1) {
       const backend = parts[0].toLowerCase();
       const rest = parts.slice(1).join(":").trim();
+      const resolved = backends.has(backend) ? backend : "auto";
       if (rest.length === 0) {
-        current = backends.has(backend) ? backend : "auto";
+        current = resolved;
         return;
       }
-      const resolved = backends.has(backend) ? backend : "auto";
       plan[resolved] = plan[resolved] || [];
       plan[resolved].push(rest);
       current = resolved;
-    } else {
-      const target = current || "auto";
-      plan[target] = plan[target] || [];
-      plan[target].push(token);
+      return;
     }
+
+    const target = current || "auto";
+    plan[target] = plan[target] || [];
+    plan[target].push(token);
   });
 
   return plan;
