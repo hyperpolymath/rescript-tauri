@@ -527,3 +527,14 @@ This library is part of the larger ecosystem:
 |Ecosystem integration
 |Week 6+
 |===
+
+== OPSM Integration
+
+[source]
+----
+OPSM Core
+  |
+  v
+rescript-tauri (Tauri bridge for OPSM desktop/mobile shell)
+
+----
